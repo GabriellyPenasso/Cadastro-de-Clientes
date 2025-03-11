@@ -1,66 +1,114 @@
+import json  # Importa a biblioteca JSON para manipulação de arquivos JSON
+import tkinter as tk # Importa sys para possíveis manipulações do sistema
+from tkinter import messagebox, simpledialog
+
 clientes = []  # Lista para armazenar os clientes
+# Nome do arquivo onde os dados dos clientes serão armazenados
+arquivo_dados = "clientes.json"
+
+def salvar_dados():
+    """Salva os dados dos clientes no arquivo JSON."""
+    with open(arquivo_dados, "w") as arquivo:
+        json.dump(clientes, arquivo, indent=4)  # Salva a lista de clientes em formato JSON, com indentação de 4 espaços
+
+def carregar_dados():
+    """Carrega os dados dos clientes do arquivo JSON."""
+    global clientes # Permite modificar a variável global clientes
+    try:
+        with open(arquivo_dados, "r") as arquivo:
+            clientes = json.load(arquivo) # Carrega os dados do arquivo JSON para a lista de clientes
+    except (FileNotFoundError, json.JSONDecodeError):  # Se o arquivo não existir ou estiver corrompido
+        clientes = []  # Inicializa a lista como vazia, drrr!
 
 def cadastrar_cliente():
     """Função para cadastrar um cliente."""
-    nome = input("Nome do cliente: ")  # Solicita o nome do cliente
-    email = input("Email do cliente: ")  # Solicita o email do cliente
-    telefone = input("Telefone do cliente: ")  # Solicita o telefone do cliente
+    nome = simpledialog.askstring("Cadastro", "Nome do cliente:")
+    email = simpledialog.askstring("Cadastro", "Email do cliente:")
+    telefone = simpledialog.askstring("Cadastro", "Telefone do cliente:")
     
-    # Cria um dicionário com os dados do cliente
-    cliente = {
-        "nome": nome,
-        "email": email,
-        "telefone": telefone,
-        "compras": []  # Lista para armazenar as compras do cliente
-    }
-    
-    clientes.append(cliente)  # Adiciona o cliente à lista de clientes
-    print("Cliente cadastrado com sucesso!\n")  # Confirmação do cadastro
+    if nome and email and telefone: # Verifica se os campos 'nome', 'email' e 'telefone' foram preenchidos#
+        cliente = {
+            "nome": nome,
+            "email": email,
+            "telefone": telefone,
+            "compras": [],
+            "carrinho": []
+        }
+        clientes.append(cliente)
+        salvar_dados()
+        messagebox.showinfo("Sucesso", "Cliente cadastrado com sucesso!")
 
 def listar_clientes():
     """Função para listar os clientes cadastrados."""
-    if not clientes:  # Verifica se a lista de clientes está vazia
-        print("Nenhum cliente cadastrado ainda.\n")  # Exibe mensagem se não houver clientes
+    if not clientes: # Verifica se a lista de clientes está vazia
+        messagebox.showinfo("Clientes", "Nenhum cliente cadastrado ainda.")
     else:
-        print("Lista de Clientes:")  # Título da listagem
-        for i, cliente in enumerate(clientes, 1):  # Percorre a lista numerando os clientes
-            print(f"{i}. Nome: {cliente['nome']}, Email: {cliente['email']}, Telefone: {cliente['telefone']}")  # Exibe os dados do cliente
-        print("\n")  # Adiciona uma linha em branco ao final
+        lista = "\n".join([f"{i+1}. {c['nome']} - {c['email']} - {c['telefone']}" for i, c in enumerate(clientes)])  # Percorre a lista de clientes
+        messagebox.showinfo("Lista de Clientes", lista)
 
-def cliente_fez_compra(email):
-    """Função para verificar se um cliente já fez alguma compra."""
+def adicionar_ao_carrinho():
+    #Função para adicionar um item ao carrinho do cliente.
+    email = simpledialog.askstring("Carrinho", "Digite o email do cliente:")
     for cliente in clientes:
-        if cliente['email'] == email:  # Verifica se o email corresponde a um cliente
-            if cliente['compras']:  # Verifica se a lista de compras não está vazia
-                return True  # Cliente já fez compras
-            else:
-                return False  # Cliente ainda não fez compras
-    return None  # Retorna None se o cliente não for encontrado
+        if cliente['email'] == email: # Percorre a lista de clientes
+            produto = simpledialog.askstring("Carrinho", "Nome do produto:")
+            quantidade = simpledialog.askinteger("Carrinho", "Quantidade:")
+            cliente['carrinho'].append({"produto": produto, "quantidade": quantidade}) # Adiciona o item ao carrinho
+            salvar_dados()
+            messagebox.showinfo("Sucesso", "Produto adicionado ao carrinho!")
+            return
+    messagebox.showerror("Erro", "Cliente não encontrado.") # Mensagem de erro se o cliente não for encontrado
 
-# Menu principal
-enquanto = True  # Variável de controle para manter o loop rodando
-while enquanto:
-    print("1 - Cadastrar Cliente")  # Opção para cadastrar um cliente
-    print("2 - Listar Clientes")  # Opção para listar clientes
-    print("3 - Verificar se um cliente fez compras")  # Opção para verificar compras
-    print("4 - Sair")  # Opção para sair do programa
-    opcao = input("Escolha uma opção: ")  # Solicita uma escolha do usuário
-    
-    if opcao == "1":  # Se o usuário escolher 1, chama a função de cadastro
-        cadastrar_cliente()
-    elif opcao == "2":  # Se o usuário escolher 2, chama a função de listagem
-        listar_clientes()
-    elif opcao == "3":  # Se o usuário escolher 3, verifica se o cliente já fez compras
-        email = input("Digite o email do cliente: ")
-        resultado = cliente_fez_compra(email)
-        if resultado is True:
-            print("O cliente já fez compras.\n")
-        elif resultado is False:
-            print("O cliente ainda não fez compras.\n")
-        else:
-            print("Cliente não encontrado.\n")
-    elif opcao == "4":  # Se o usuário escolher 4, encerra o loop
-        print("Saindo...")  # Mensagem de saída
-        enquanto = False  # Define a variável para encerrar o loop
-    else:
-        print("Opção inválida!\n")  # Mensagem de erro para entrada inválida
+def visualizar_carrinho():
+    #Função para visualizar o carrinho do cliente.
+    email = simpledialog.askstring("Carrinho", "Digite o email do cliente:")
+    for cliente in clientes:
+        if cliente['email'] == email:
+            if not cliente['carrinho']:
+                messagebox.showinfo("Carrinho", "O carrinho está vazio.")
+                return
+            lista = "\n".join([f"{item['produto']} - {item['quantidade']}" for item in cliente['carrinho']])
+            messagebox.showinfo("Carrinho", lista)
+            return
+    messagebox.showerror("Erro", "Cliente não encontrado.")
+
+def finalizar_compra():
+    #Função para finalizar a compra do carrinho.
+    email = simpledialog.askstring("Compra", "Digite o email do cliente:")
+    for cliente in clientes:
+        if cliente['email'] == email:
+            if not cliente['carrinho']:
+                messagebox.showinfo("Compra", "O carrinho está vazio.")
+                return
+            cliente['compras'].extend(cliente['carrinho'])
+            cliente['carrinho'].clear()
+            salvar_dados()
+            messagebox.showinfo("Sucesso", "Compra finalizada com sucesso!")
+            return
+    messagebox.showerror("Erro", "Cliente não encontrado.")
+
+def sair():
+    #Fecha a aplicação.
+    janela.quit()
+
+# Interface gráfica
+carregar_dados()
+janela = tk.Tk()
+janela.title("Sistema de Carrinho")
+janela.geometry("300x300")
+
+btn_cadastrar = tk.Button(janela, text="Cadastrar Cliente", command=cadastrar_cliente)
+btn_listar = tk.Button(janela, text="Listar Clientes", command=listar_clientes)
+btn_adicionar = tk.Button(janela, text="Adicionar ao Carrinho", command=adicionar_ao_carrinho)
+btn_visualizar = tk.Button(janela, text="Visualizar Carrinho", command=visualizar_carrinho)
+btn_finalizar = tk.Button(janela, text="Finalizar Compra", command=finalizar_compra)
+btn_sair = tk.Button(janela, text="Sair", command=sair) 
+
+btn_cadastrar.pack(pady=5)
+btn_listar.pack(pady=5)
+btn_adicionar.pack(pady=5)
+btn_visualizar.pack(pady=5)
+btn_finalizar.pack(pady=5)
+btn_sair.pack(pady=5)
+
+janela.mainloop()
