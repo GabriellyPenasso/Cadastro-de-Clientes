@@ -1,3 +1,3 @@
 ![pytho1](https://github.com/user-attachments/assets/1e41f04d-eeb8-4fb4-bbe8-abab5463d1f0)
 # Cadastro-de-Clientes
-Desenvolvemos um sistema de cadastro de clientes em Python. Ele permite adicionar clientes, listar os cadastrados e verificar se eles já realizaram compras. O programa funciona com um menu interativo e armazena os dados em uma lista.
+Desenvolvemos um sistema de cadastro de clientes e carrinho de compras em Python, utilizando Tkinter para a interface gráfica. O sistema permite cadastrar clientes, listar os cadastrados, adicionar produtos ao carrinho, visualizar os itens e finalizar a compra. Além disso, os dados são salvos em um arquivo JSON, garantindo que as informações sejam mantidas mesmo após o fechamento do programa. Esse projeto demonstra a aplicação prática de manipulação de dados e interação com o usuário de forma simples e eficiente.
