@@ -1,6 +1,50 @@
 import tkinter as tk
 from tkinter import ttk, messagebox
-from PIL import Image, ImageTk
+import json
+
+class Cliente:
+    def __init__(self, nome, email):
+        self.nome = nome
+        self.email = email
+
+class FormaDePagamento:
+    def __init__(self, tipo):
+        self.tipo = tipo
+
+class ItemPedido:
+    def __init__(self, nome, preco, quantidade):
+        self.nome = nome
+        self.preco = preco
+        self.quantidade = quantidade
+
+    def valor_total(self):
+        return self.preco * self.quantidade
+
+class Pedido:
+    def __init__(self, cliente, forma_pagamento):
+        self.cliente = cliente
+        self.forma_pagamento = forma_pagamento
+        self.itens = []
+        self.subtotal = 0.0
+        self.total = 0.0
+
+    def adicionar_item(self, item):
+        self.itens.append(item)
+        self.subtotal += item.valor_total()
+
+    def calcular_total(self):
+        self.total = self.subtotal
+
+    def salvar_pedido(self):
+        pedido_dict = {
+            "cliente": {"nome": self.cliente.nome, "email": self.cliente.email},
+            "forma_pagamento": self.forma_pagamento.tipo,
+            "itens": [{"nome": item.nome, "preco": item.preco, "quantidade": item.quantidade, "valor_total": item.valor_total()} for item in self.itens],
+            "subtotal": self.subtotal,
+            "total": self.total
+        }
+        with open("pedido.json", "w") as f:
+            json.dump(pedido_dict, f, indent=4)
 
 # Função de login
 def verificar_login():
@@ -29,101 +73,45 @@ def abrir_interface_principal():
     canvas.create_rectangle(450, 50, 840, 200)
     canvas.create_rectangle(450, 250, 840, 400)
 
-    frame1 = tk.Frame(root)
-    frame1.place(x=200, y=73, width=180, height=120)
-    texto1 = tk.Label(frame1, text="Canetas BIC", font=("Arial", 16))
-    texto1.pack()
-    preco1 = tk.Label(frame1, text="Preço - R$ 19,99", font=("Arial", 14))
-    preco1.pack()
+    # Produtos
+    produtos = [
+        ("Canetas BIC", 19.99, 0),
+        ("Mochila Kipling", 999.99, 0),
+        ("Caderno Tilibra", 39.99, 0),
+        ("Estojo Kipling", 99.99, 0),
+        ("Kit de Lapis", 249.99, 0)
+    ]
 
-    frame1_botao = tk.Frame(frame1)
-    frame1_botao.pack(pady=(18, 0))
-    botao_menos1 = tk.Button(frame1_botao, text="-", command=lambda: atualizar_quantidade(quantidade1, -1), width=3, height=1, font=("Arial", 12), bg="#CCCCCC", fg="#000000", relief="ridge", borderwidth=2)
-    botao_menos1.pack(side=tk.LEFT, padx=2)
-    quantidade1 = tk.Label(frame1_botao, text="0", font=("Arial", 12))
-    quantidade1.pack(side=tk.LEFT, padx=2)
-    botao_mais1 = tk.Button(frame1_botao, text="+", command=lambda: atualizar_quantidade(quantidade1, 1), width=3, height=1, font=("Arial", 12), bg="#CCCCCC", fg="#000000", relief="ridge", borderwidth=2)
-    botao_mais1.pack(side=tk.LEFT, padx=2)
+    quantidade_labels = []
+    for i, (produto, preco, _) in enumerate(produtos):
+        frame = tk.Frame(root)
+        frame.place(x=200 + (i % 2) * 450, y=73 + (i // 2) * 200, width=180, height=120)
+        texto = tk.Label(frame, text=produto, font=("Arial", 16))
+        texto.pack()
+        preco_label = tk.Label(frame, text=f"Preço - R$ {preco:.2f}", font=("Arial", 14))
+        preco_label.pack()
 
-    frame2 = tk.Frame(root)
-    frame2.place(x=200, y=270, width=180, height=120)
-    texto2 = tk.Label(frame2, text="Mochila Kipling", font=("Arial", 16))
-    texto2.pack()
-    preco2 = tk.Label(frame2, text="Preço - R$ 999,99", font=("Arial", 14))
-    preco2.pack()
+        frame_botao = tk.Frame(frame)
+        frame_botao.pack(pady=(18, 0))
+        botao_menos = tk.Button(frame_botao, text="-", command=lambda i=i: atualizar_quantidade(i, -1), width=3, height=1, font=("Arial", 12), bg="#CCCCCC", fg="#000000", relief="ridge", borderwidth=2)
+        botao_menos.pack(side=tk.LEFT, padx=2)
+        quantidade_label = tk.Label(frame_botao, text="0", font=("Arial", 12))
+        quantidade_label.pack(side=tk.LEFT, padx=2)
+        quantidade_labels.append(quantidade_label)
+        botao_mais = tk.Button(frame_botao, text="+", command=lambda i=i: atualizar_quantidade(i, 1), width=3, height=1, font=("Arial", 12), bg="#CCCCCC", fg="#000000", relief="ridge", borderwidth=2)
+        botao_mais.pack(side=tk.LEFT, padx=2)
 
-    frame2_botao = tk.Frame(frame2)
-    frame2_botao.pack(pady=(18, 0))
-    botao_menos2 = tk.Button(frame2_botao, text="-", command=lambda: atualizar_quantidade(quantidade2, -1), width=3, height=1, font=("Arial", 12), bg="#CCCCCC", fg="#000000", relief="ridge", borderwidth=2)
-    botao_menos2.pack(side=tk.LEFT, padx=2)
-    quantidade2 = tk.Label(frame2_botao, text="0", font=("Arial", 12))
-    quantidade2.pack(side=tk.LEFT, padx=2)
-    botao_mais2 = tk.Button(frame2_botao, text="+", command=lambda: atualizar_quantidade(quantidade2, 1), width=3, height=1, font=("Arial", 12), bg="#CCCCCC", fg="#000000", relief="ridge", borderwidth=2)
-    botao_mais2.pack(side=tk.LEFT, padx=2)
-
-    frame3 = tk.Frame(root)
-    frame3.place(x=200, y=475, width=180, height=120)
-    texto3 = tk.Label(frame3, text="Caderno Tilibra", font=("Arial", 16))
-    texto3.pack()
-    preco3 = tk.Label(frame3, text="Preço - R$ 39,99", font=("Arial", 14))
-    preco3.pack()
-
-    frame3_botao = tk.Frame(frame3)
-    frame3_botao.pack(pady=(18, 0))
-    botao_menos3 = tk.Button(frame3_botao, text="-", command=lambda: atualizar_quantidade(quantidade3, -1), width=3, height=1, font=("Arial", 12), bg="#CCCCCC", fg="#000000", relief="ridge", borderwidth=2)
-    botao_menos3.pack(side=tk.LEFT, padx=2)
-    quantidade3 = tk.Label(frame3_botao, text="0", font=("Arial", 12))
-    quantidade3.pack(side=tk.LEFT, padx=2)
-    botao_mais3 = tk.Button(frame3_botao, text="+", command=lambda: atualizar_quantidade(quantidade3, 1), width=3, height=1, font=("Arial", 12), bg="#CCCCCC", fg="#000000", relief="ridge", borderwidth=2)
-    botao_mais3.pack(side=tk.LEFT, padx=2)
-
-    frame4 = tk.Frame(root)
-    frame4.place(x=650, y=73, width=180, height=120)  # Mudou de 420 para 650
-    texto4 = tk.Label(frame4, text="Estojo Kipling", font=("Arial", 16))
-    texto4.pack()
-    preco4 = tk.Label(frame4, text="Preço - R$ 99,99", font=("Arial", 14))
-    preco4.pack()
-
-    frame4_botao = tk.Frame(frame4)
-    frame4_botao.pack(pady=(18, 0))
-    botao_menos4 = tk.Button(frame4_botao, text="-", command=lambda: atualizar_quantidade(quantidade4, -1), width=3, height=1, font=("Arial", 12), bg="#CCCCCC", fg="#000000", relief="ridge", borderwidth=2)
-    botao_menos4.pack(side=tk.LEFT, padx=2)
-    quantidade4 = tk.Label(frame4_botao, text="0", font=("Arial", 12))
-    quantidade4.pack(side=tk.LEFT, padx=2)
-    botao_mais4 = tk.Button(frame4_botao, text="+", command=lambda: atualizar_quantidade(quantidade4, 1), width=3, height=1, font=("Arial", 12), bg="#CCCCCC", fg="#000000", relief="ridge", borderwidth=2)
-    botao_mais4.pack(side=tk.LEFT, padx=2)
-
-    frame5 = tk.Frame(root)
-    frame5.place(x=650, y=270, width=180, height=120)  # Mudou de 420 para 650
-    texto5 = tk.Label(frame5, text="Kit de Lapis", font=("Arial", 16))
-    texto5.pack()
-    preco5 = tk.Label(frame5, text="Preço - R$ 249,99", font=("Arial", 14))
-    preco5.pack()
-
-    frame5_botao = tk.Frame(frame5)
-    frame5_botao.pack(pady=(18, 0))
-    botao_menos5 = tk.Button(frame5_botao, text="-", command=lambda: atualizar_quantidade(quantidade5, -1), width=3, height=1, font=("Arial", 12), bg="#CCCCCC", fg="#000000", relief="ridge", borderwidth=2)
-    botao_menos5.pack(side=tk.LEFT, padx=2)
-    quantidade5 = tk.Label(frame5_botao, text="0", font=("Arial", 12))
-    quantidade5.pack(side=tk.LEFT, padx=2)
-    botao_mais5 = tk.Button(frame5_botao, text="+", command=lambda: atualizar_quantidade(quantidade5, 1), width=3, height=1, font=("Arial", 12), bg="#CCCCCC", fg="#000000", relief="ridge", borderwidth=2)
-    botao_mais5.pack(side=tk.LEFT, padx=2)
-
-    botao_comprar = tk.Button(root, text="Finalizar Compra", command=lambda: abrir_janela_carrinho(), width=15, height=1, font=("Arial", 12), bg="#CCCCCC", fg="#000000", relief="ridge", borderwidth=2)
-    botao_comprar.place(x=600, y=500)
-
-    def atualizar_quantidade(label, valor):
-        quantidade = int(label.cget("text"))
+    def atualizar_quantidade(i, valor):
+        quantidade = int(quantidade_labels[i].cget("text"))
         quantidade += valor
         if quantidade < 0:
             quantidade = 0
-        label.config(text=str(quantidade))
+        quantidade_labels[i].config(text=str(quantidade))
 
     def abrir_janela_carrinho():
         janela_carrinho = tk.Toplevel(root)
         janela_carrinho.title("Carrinho de Compras")
 
-        # Crie a tabela para mostrar os produtos
         tabela_produtos = ttk.Treeview(janela_carrinho)
         tabela_produtos["columns"] = ("Produto", "Quantidade", "Valor Unitário", "Valor Total")
         tabela_produtos.column("#0", width=0, stretch=tk.NO)
@@ -140,23 +128,24 @@ def abrir_interface_principal():
         tabela_produtos.heading("Valor Total", text="Valor Total", anchor=tk.W)
 
         # Adicionar produtos no carrinho
-        produtos = [
-            ("Canetas BIC", quantidade1, 19.99),
-            ("Mochila Kipling", quantidade2, 999.99),
-            ("Caderno Tilibra", quantidade3, 39.99),
-            ("Estojo Kipling", quantidade4, 99.99),
-            ("Kit de Lapis", quantidade5, 249.99)
+        itens = [
+            ("Canetas BIC", 19.99),
+            ("Mochila Kipling", 999.99),
+            ("Caderno Tilibra", 39.99),
+            ("Estojo Kipling", 99.99),
+            ("Kit de Lapis", 249.99)
         ]
+        pedido = Pedido(Cliente("Cliente", "cliente@example.com"), FormaDePagamento("Cartão de Crédito"))
 
-        for produto, label_quantidade, preco in produtos:
-            quantidade = int(label_quantidade.cget("text"))
+        for i, (produto, preco) in enumerate(itens):
+            quantidade = int(quantidade_labels[i].cget("text"))
             if quantidade > 0:
-                valor_total = preco * quantidade
-                tabela_produtos.insert("", "end", values=(produto, quantidade, f"R$ {preco:.2f}", f"R$ {valor_total:.2f}"))
+                item = ItemPedido(produto, preco, quantidade)
+                pedido.adicionar_item(item)
+                tabela_produtos.insert("", "end", values=(produto, quantidade, f"R$ {preco:.2f}", f"R$ {item.valor_total():.2f}"))
 
-        # Calcular o total
-        total = sum(int(label_quantidade.cget("text")) * preco for _, label_quantidade, preco in produtos)
-        label_total = tk.Label(janela_carrinho, text=f"Total: R$ {total:.2f}", font=("Arial", 14))
+        pedido.calcular_total()
+        label_total = tk.Label(janela_carrinho, text=f"Total: R$ {pedido.total:.2f}", font=("Arial", 14))
         label_total.grid(row=1, column=0, pady=10)
 
         # Opções de pagamento
@@ -170,6 +159,8 @@ def abrir_interface_principal():
 
         def finalizar_compra():
             pagamento_selecionado = combo_pagamento.get()
+            pedido.forma_pagamento = FormaDePagamento(pagamento_selecionado)
+            pedido.salvar_pedido()
             messagebox.showinfo("Compra Finalizada", f"Compra finalizada com sucesso! Forma de pagamento: {pagamento_selecionado}")
             janela_carrinho.destroy()
 
@@ -178,28 +169,25 @@ def abrir_interface_principal():
 
         janela_carrinho.mainloop()
 
+    botao_comprar = tk.Button(root, text="Finalizar Compra", command=abrir_janela_carrinho, width=15, height=1, font=("Arial", 12), bg="#CCCCCC", fg="#000000", relief="ridge", borderwidth=2)
+    botao_comprar.place(x=600, y=500)
+
     root.mainloop()
 
 # Tela de login
 root_login = tk.Tk()
-root_login.title("Tela de Login")
+root_login.title("Login")
 
-# Tamanho da janela
-root_login.geometry("400x300")
-
-# Adicionando o campo de Email
-label_email = tk.Label(root_login, text="Email:")
-label_email.pack(pady=5)
-entry_email = tk.Entry(root_login, font=("Arial", 14))
+label_email = tk.Label(root_login, text="Email:", font=("Arial", 12))
+label_email.pack(pady=10)
+entry_email = tk.Entry(root_login, font=("Arial", 12))
 entry_email.pack(pady=5)
 
-# Adicionando o campo de Senha
-label_senha = tk.Label(root_login, text="Senha:")
-label_senha.pack(pady=5)
-entry_senha = tk.Entry(root_login, show="*", font=("Arial", 14))
+label_senha = tk.Label(root_login, text="Senha:", font=("Arial", 12))
+label_senha.pack(pady=10)
+entry_senha = tk.Entry(root_login, show="*", font=("Arial", 12))
 entry_senha.pack(pady=5)
 
-# Adicionando o botão de login
 botao_login = tk.Button(root_login, text="Login", command=verificar_login, font=("Arial", 12), bg="#4CAF50", fg="white")
 botao_login.pack(pady=20)
 
